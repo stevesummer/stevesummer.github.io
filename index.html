@@ -9,6 +9,7 @@
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 
+        <!-- MS Clarity -->
         <script type="text/javascript">
             (function(c,l,a,r,i,t,y){
                 c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -42,7 +43,7 @@
 							</section>
 
 						<!-- Panel (Spotlight) -->
-							<section class="panel spotlight medium" id="first">
+							<section class="panel spotlight large" id="first">
 								<div class="content span-7">
 									<h2 class="major">Experience</h2>
 									<p>With over a decade years of experience, I have worked in senior positions to build resilient, cloud-native backend systems and data platforms. I leverage languages and tools to deliver products, from high-throughput payment and subscription services, to analytics databases and ETL pipelines. My work resolves around developing backend software (Golang, Python, Javascript), designing scalable cloud architectures (focus on AWS), implementing streaming and messaging solutions (Kafka, Redis, RabbitMQ), and web applications.</p>
@@ -89,20 +90,20 @@
 									<h2 class="major">Stills</h2>
 									<p>Selected works in non-motion photography — portraits, landscapes, and visual narratives that capture simple truths, fleeting light, and the textures of everyday life.</p>
 								</div>
-								<div class="gallery">
+								<div class="gallery" id="gallery">
 									<div class="group span-3">
-										<a href="images/gallery/fulls/01.jpg" class="image filtered span-3" data-position="bottom"><img src="images/gallery/thumbs/01.jpg" alt="" /></a>
-										<a href="images/gallery/fulls/02.jpg" class="image filtered span-1-5" data-position="center"><img src="images/gallery/thumbs/02.jpg" alt="" /></a>
-										<a href="images/gallery/fulls/03.jpg" class="image filtered span-1-5" data-position="bottom"><img src="images/gallery/thumbs/03.jpg" alt="" /></a>
+										<span class="image filtered span-3" data-position="center"><img src="images/gallery/green.jpeg" alt="" /></span>
+										<span class="image filtered span-1-5" data-position="bottom"><img src="images/gallery/disarray-in-focus.jpg" alt="" /></span>
+										<span class="image filtered span-1-5" data-position="center"><img src="images/gallery/mundane.jpeg" alt="" /></span>
 									</div>
-									<a href="images/gallery/fulls/04.jpg" class="image filtered span-2-5" data-position="top"><img src="images/gallery/thumbs/04.jpg" alt="" /></a>
+									<span class="image filtered span-2-5" data-position="center"><img src="images/gallery/torch.jpg" alt="" /></span>
 									<div class="group span-4-5">
-										<a href="images/gallery/fulls/05.jpg" class="image filtered span-3" data-position="top"><img src="images/gallery/thumbs/05.jpg" alt="" /></a>
-										<a href="images/gallery/fulls/06.jpg" class="image filtered span-1-5" data-position="center"><img src="images/gallery/thumbs/06.jpg" alt="" /></a>
-										<a href="images/gallery/fulls/07.jpg" class="image filtered span-1-5" data-position="bottom"><img src="images/gallery/thumbs/07.jpg" alt="" /></a>
-										<a href="images/gallery/fulls/08.jpg" class="image filtered span-3" data-position="top"><img src="images/gallery/thumbs/08.jpg" alt="" /></a>
+										<span class="image filtered span-3" data-position="center"><img src="images/gallery/palace.jpeg" alt="" /></span>
+										<span class="image filtered span-1-5" data-position="bottom"><img src="images/gallery/city.jpeg" alt="" /></span>
+										<span class="image filtered span-1-5" data-position="center"><img src="images/gallery/primate.jpg" alt="" /></span>
+										<span class="image filtered span-3" data-position="bottom"><img src="images/gallery/woods.jpeg" alt="" /></span>
 									</div>
-									<a href="images/gallery/fulls/09.jpg" class="image filtered span-2-5" data-position="right"><img src="images/gallery/thumbs/09.jpg" alt="" /></a>
+									<span class="image filtered span-2-5" data-position="right"><img src="images/gallery/trunk.jpeg" alt="" /></span>
 								</div>
 							</section>
 
@@ -114,9 +115,9 @@
 								</div>
 								<div class="inner columns divided">
 									<div class="span-3-25">
-										<form method="post" action="#">
+										<form id="contact-form">
 											<div class="fields">
-												<div class="field">
+												<div class="field half">
 													<label for="name">Name</label>
 													<input type="text" name="name" id="name" required/>
 												</div>
@@ -134,13 +135,17 @@
                                                         </select>
                                                     </div>
                                                 </div>
+                                                <div class="field half">
+                                                    <label for="file">File</label>
+                                                    <input type="file" name="file" id="file" accept="*/*" style="margin-top: 0.5rem"/>
+                                                </div>
 												<div class="field">
 													<label for="message">Message</label>
 													<textarea name="message" id="message" rows="4" required></textarea>
 												</div>
 											</div>
 											<ul class="actions">
-												<li><input type="submit" value="Send Message" class="button primary" /></li>
+                                                <li><button id="contact-form-submit" class="button primary">Send Message</button></li>
 											</ul>
 										</form>
 									</div>
@@ -431,10 +436,9 @@ print 'It took ' + i + ' iterations to sort the deck.';</code></pre>
 			</div>
 
 		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/main.js"></script>
+        <script src="assets/js/browser.min.js"></script>
+        <script src="assets/js/breakpoints.min.js"></script>
+        <script type="module" src="assets/js/main.js"></script>
 
 	</body>
 </html>

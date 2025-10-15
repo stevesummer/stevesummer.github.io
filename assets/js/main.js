@@ -1,759 +1,819 @@
+import jQuery from "jquery";
+
 /*
 	Ethereal by HTML5 UP
 	html5up.net | @ajlkn
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
+const FORM_EMAIL = "stevesummer61@gmail.com"
+
+const submitForm = async (data = {}, dest = FORM_EMAIL) => {
+    const resp = await fetch("https://templinx6.api.linx.twenty57.net/Form2Channel", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        body: JSON.stringify([
+            {"key": "formto_email", "value": dest},
+            {"key": "formto_immediate", "value": ""},
+            {"key": "date", "value": (new Date()).toISOString()},
+            {"key": "form", "value": `Message from ${data.name ?? "Unknown Sender"}`},
+            {"key": "name", "value": data.name},
+            {"key": "email", "value": data.email},
+            {"key": "category", "value": data.category},
+            {"key": "message", "value": data.message},
+            {"key": "rawdata", "value": JSON.stringify(data)},
+        ]),
+    });
+    if (!resp.ok) {
+        console.error("Network response was not ok", resp.status);
+        throw new Error("Network response was not ok");
+    }
+    if (!(await resp.json()).Success) {
+        throw new Error("Unexpected error occurred.");
+    }
+
+    return true;
+};
+
+
+(function ($) {
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        var $form = $("#contact-form");
+        let $submitBtn = $("#contact-form-submit");
+        let originalText = $submitBtn.text();
+
+        $submitBtn.prop('disabled', true).text('Submitting...');
+        submitForm({
+            name: $("#name").val(),
+            email: $("#email").val(),
+            category: $("#category").val(),
+            message: $("#message").val(),
+        }).then(response => {
+            console.debug(response);
+            $submitBtn.text('Message sent!');
+            setTimeout(function() {
+                $form.reset();
+                $submitBtn.prop('disabled', false).text(originalText);
+            }, 1500);
+        }).catch(e => {
+            console.error(e);
+            $submitBtn.text('Error! Try again');
+            setTimeout(function() {
+                $submitBtn.prop('disabled', false).text(originalText);
+            }, 2000);
+        })
+    }
+    $("#contact-form").on("submit", handleSubmit);
+
+    // Settings.
+    var settings = {
+
+        // Keyboard shortcuts.
+        keyboardShortcuts: {
+
+            // If true, enables scrolling via keyboard shortcuts.
+            enabled: true,
+
+            // Sets the distance to scroll when using the left/right arrow keys.
+            distance: 50
+
+        },
+
+        // Scroll wheel.
+        scrollWheel: {
+
+            // If true, enables scrolling via the scroll wheel.
+            enabled: true,
+
+            // Sets the scroll wheel factor. (Ideally) a value between 0 and 1 (lower = slower scroll, higher = faster scroll).
+            factor: 1
+
+        },
+
+        // Scroll zones.
+        scrollZones: {
+
+            // If true, enables scrolling via scroll zones on the left/right edges of the scren.
+            enabled: true,
+
+            // Sets the speed at which the page scrolls when a scroll zone is active (higher = faster scroll, lower = slower scroll).
+            speed: 15
+
+        },
+
+        // Dragging.
+        dragging: {
 
-(function($) {
+            // If true, enables scrolling by dragging the main wrapper with the mouse.
+            enabled: true,
 
-	// Settings.
-		var settings = {
+            // Sets the momentum factor. Must be a value between 0 and 1 (lower = less momentum, higher = more momentum, 0 = disable momentum scrolling).
+            momentum: 0.875,
 
-			// Keyboard shortcuts.
-				keyboardShortcuts: {
+            // Sets the drag threshold (in pixels).
+            threshold: 10
 
-					// If true, enables scrolling via keyboard shortcuts.
-						enabled: true,
+        },
 
-					// Sets the distance to scroll when using the left/right arrow keys.
-						distance: 50
+        // If set to a valid selector , prevents key/mouse events from bubbling from these elements.
+        excludeSelector: 'input:focus, select:focus, textarea:focus, audio, video, iframe',
 
-				},
+        // Link scroll speed.
+        linkScrollSpeed: 1000
 
-			// Scroll wheel.
-				scrollWheel: {
+    };
 
-					// If true, enables scrolling via the scroll wheel.
-						enabled: true,
+    // Vars.
+    var $window = $(window),
+        $document = $(document),
+        $body = $('body'),
+        $html = $('html'),
+        $bodyHtml = $('body,html'),
+        $wrapper = $('#wrapper');
 
-					// Sets the scroll wheel factor. (Ideally) a value between 0 and 1 (lower = slower scroll, higher = faster scroll).
-						factor: 1
+    // Breakpoints.
+    breakpoints({
+        xlarge: ['1281px', '1680px'],
+        large: ['981px', '1280px'],
+        medium: ['737px', '980px'],
+        small: ['481px', '736px'],
+        xsmall: ['361px', '480px'],
+        xxsmall: [null, '360px'],
+        short: '(min-aspect-ratio: 16/7)',
+        xshort: '(min-aspect-ratio: 16/6)'
+    });
 
-				},
+    // Play initial animations on page load.
+    $window.on('load', function () {
+        window.setTimeout(function () {
+            $body.removeClass('is-preload');
+        }, 100);
+    });
 
-			// Scroll zones.
-				scrollZones: {
+    // Tweaks/fixes.
 
-					// If true, enables scrolling via scroll zones on the left/right edges of the scren.
-						enabled: true,
+    // Mobile: Revert to native scrolling.
+    if (browser.mobile) {
 
-					// Sets the speed at which the page scrolls when a scroll zone is active (higher = faster scroll, lower = slower scroll).
-						speed: 15
+        // Disable all scroll-assist features.
+        settings.keyboardShortcuts.enabled = false;
+        settings.scrollWheel.enabled = false;
+        settings.scrollZones.enabled = false;
+        settings.dragging.enabled = false;
 
-				},
+        // Re-enable overflow on body.
+        $body.css('overflow-x', 'auto');
 
-			// Dragging.
-				dragging: {
+    }
 
-					// If true, enables scrolling by dragging the main wrapper with the mouse.
-						enabled: true,
+    // IE: Various fixes.
+    if (browser.name == 'ie') {
 
-					// Sets the momentum factor. Must be a value between 0 and 1 (lower = less momentum, higher = more momentum, 0 = disable momentum scrolling).
-						momentum: 0.875,
+        // Enable IE mode.
+        $body.addClass('is-ie');
 
-					// Sets the drag threshold (in pixels).
-						threshold: 10
+        // Page widths.
+        $window
+            .on('load resize', function () {
 
-				},
+                // Calculate wrapper width.
+                var w = 0;
 
-			// If set to a valid selector , prevents key/mouse events from bubbling from these elements.
-				excludeSelector: 'input:focus, select:focus, textarea:focus, audio, video, iframe',
+                $wrapper.children().each(function () {
+                    w += $(this).width();
+                });
 
-			// Link scroll speed.
-				linkScrollSpeed: 1000
+                // Apply to page.
+                $html.css('width', w + 'px');
 
-		};
+            });
 
-	// Vars.
-		var	$window = $(window),
-			$document = $(document),
-			$body = $('body'),
-			$html = $('html'),
-			$bodyHtml = $('body,html'),
-			$wrapper = $('#wrapper');
+    }
 
-	// Breakpoints.
-		breakpoints({
-			xlarge:   [ '1281px',  '1680px' ],
-			large:    [ '981px',   '1280px' ],
-			medium:   [ '737px',   '980px'  ],
-			small:    [ '481px',   '736px'  ],
-			xsmall:   [ '361px',   '480px'  ],
-			xxsmall:  [ null,      '360px'  ],
-			short:    '(min-aspect-ratio: 16/7)',
-			xshort:   '(min-aspect-ratio: 16/6)'
-		});
+    // Polyfill: Object fit.
+    if (!browser.canUse('object-fit')) {
 
-	// Play initial animations on page load.
-		$window.on('load', function() {
-			window.setTimeout(function() {
-				$body.removeClass('is-preload');
-			}, 100);
-		});
+        $('.image[data-position]').each(function () {
 
-	// Tweaks/fixes.
+            var $this = $(this),
+                $img = $this.children('img');
 
-		// Mobile: Revert to native scrolling.
-			if (browser.mobile) {
+            // Apply img as background.
+            $this
+                .css('background-image', 'url("' + $img.attr('src') + '")')
+                .css('background-position', $this.data('position'))
+                .css('background-size', 'cover')
+                .css('background-repeat', 'no-repeat');
 
-				// Disable all scroll-assist features.
-					settings.keyboardShortcuts.enabled = false;
-					settings.scrollWheel.enabled = false;
-					settings.scrollZones.enabled = false;
-					settings.dragging.enabled = false;
+            // Hide img.
+            $img
+                .css('opacity', '0');
 
-				// Re-enable overflow on body.
-					$body.css('overflow-x', 'auto');
+        });
 
-			}
+    }
 
-		// IE: Various fixes.
-			if (browser.name == 'ie') {
+    // Keyboard shortcuts.
+    if (settings.keyboardShortcuts.enabled)
+        (function () {
 
-				// Enable IE mode.
-					$body.addClass('is-ie');
+            $wrapper
 
-				// Page widths.
-					$window
-						.on('load resize', function() {
+                // Prevent keystrokes inside excluded elements from bubbling.
+                .on('keypress keyup keydown', settings.excludeSelector, function (event) {
 
-							// Calculate wrapper width.
-								var w = 0;
+                    // Stop propagation.
+                    event.stopPropagation();
 
-								$wrapper.children().each(function() {
-									w += $(this).width();
-								});
+                });
 
-							// Apply to page.
-								$html.css('width', w + 'px');
+            $window
 
-						});
+                // Keypress event.
+                .on('keydown', function (event) {
 
-			}
+                    var scrolled = false;
 
-		// Polyfill: Object fit.
-			if (!browser.canUse('object-fit')) {
+                    switch (event.keyCode) {
 
-				$('.image[data-position]').each(function() {
+                        // Left arrow.
+                        case 37:
+                            $document.scrollLeft($document.scrollLeft() - settings.keyboardShortcuts.distance);
+                            scrolled = true;
+                            break;
 
-					var $this = $(this),
-						$img = $this.children('img');
+                        // Right arrow.
+                        case 39:
+                            $document.scrollLeft($document.scrollLeft() + settings.keyboardShortcuts.distance);
+                            scrolled = true;
+                            break;
 
-					// Apply img as background.
-						$this
-							.css('background-image', 'url("' + $img.attr('src') + '")')
-							.css('background-position', $this.data('position'))
-							.css('background-size', 'cover')
-							.css('background-repeat', 'no-repeat');
+                        // Page Up.
+                        case 33:
+                            $document.scrollLeft($document.scrollLeft() - $window.width() + 100);
+                            scrolled = true;
+                            break;
 
-					// Hide img.
-						$img
-							.css('opacity', '0');
+                        // Page Down, Space.
+                        case 34:
+                        case 32:
+                            $document.scrollLeft($document.scrollLeft() + $window.width() - 100);
+                            scrolled = true;
+                            break;
 
-				});
+                        // Home.
+                        case 36:
+                            $document.scrollLeft(0);
+                            scrolled = true;
+                            break;
 
-			}
+                        // End.
+                        case 35:
+                            $document.scrollLeft($document.width());
+                            scrolled = true;
+                            break;
 
-	// Keyboard shortcuts.
-		if (settings.keyboardShortcuts.enabled)
-			(function() {
+                    }
 
-				$wrapper
+                    // Scrolled?
+                    if (scrolled) {
 
-					// Prevent keystrokes inside excluded elements from bubbling.
-						.on('keypress keyup keydown', settings.excludeSelector, function(event) {
+                        // Prevent default.
+                        event.preventDefault();
+                        event.stopPropagation();
 
-							// Stop propagation.
-								event.stopPropagation();
+                        // Stop link scroll.
+                        $bodyHtml.stop();
 
-						});
+                    }
 
-				$window
+                });
 
-					// Keypress event.
-						.on('keydown', function(event) {
+        })();
 
-							var scrolled = false;
+    // Scroll wheel.
+    if (settings.scrollWheel.enabled)
+        (function () {
 
-							switch (event.keyCode) {
+            // Based on code by @miorel + @pieterv of Facebook (thanks guys :)
+            // github.com/facebook/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
+            var normalizeWheel = function (event) {
 
-								// Left arrow.
-									case 37:
-										$document.scrollLeft($document.scrollLeft() - settings.keyboardShortcuts.distance);
-										scrolled = true;
-										break;
+                var pixelStep = 10,
+                    lineHeight = 40,
+                    pageHeight = 800,
+                    sX = 0,
+                    sY = 0,
+                    pX = 0,
+                    pY = 0;
 
-								// Right arrow.
-									case 39:
-										$document.scrollLeft($document.scrollLeft() + settings.keyboardShortcuts.distance);
-										scrolled = true;
-										break;
+                // Legacy.
+                if ('detail' in event)
+                    sY = event.detail;
+                else if ('wheelDelta' in event)
+                    sY = event.wheelDelta / -120;
+                else if ('wheelDeltaY' in event)
+                    sY = event.wheelDeltaY / -120;
 
-								// Page Up.
-									case 33:
-										$document.scrollLeft($document.scrollLeft() - $window.width() + 100);
-										scrolled = true;
-										break;
+                if ('wheelDeltaX' in event)
+                    sX = event.wheelDeltaX / -120;
 
-								// Page Down, Space.
-									case 34:
-									case 32:
-										$document.scrollLeft($document.scrollLeft() + $window.width() - 100);
-										scrolled = true;
-										break;
+                // Side scrolling on FF with DOMMouseScroll.
+                if ('axis' in event
+                    && event.axis === event.HORIZONTAL_AXIS) {
+                    sX = sY;
+                    sY = 0;
+                }
 
-								// Home.
-									case 36:
-										$document.scrollLeft(0);
-										scrolled = true;
-										break;
+                // Calculate.
+                pX = sX * pixelStep;
+                pY = sY * pixelStep;
 
-								// End.
-									case 35:
-										$document.scrollLeft($document.width());
-										scrolled = true;
-										break;
+                if ('deltaY' in event)
+                    pY = event.deltaY;
 
-							}
+                if ('deltaX' in event)
+                    pX = event.deltaX;
 
-							// Scrolled?
-								if (scrolled) {
+                if ((pX || pY)
+                    && event.deltaMode) {
 
-									// Prevent default.
-										event.preventDefault();
-										event.stopPropagation();
+                    if (event.deltaMode == 1) {
+                        pX *= lineHeight;
+                        pY *= lineHeight;
+                    } else {
+                        pX *= pageHeight;
+                        pY *= pageHeight;
+                    }
 
-									// Stop link scroll.
-										$bodyHtml.stop();
+                }
 
-								}
+                // Fallback if spin cannot be determined.
+                if (pX && !sX)
+                    sX = (pX < 1) ? -1 : 1;
 
-						});
+                if (pY && !sY)
+                    sY = (pY < 1) ? -1 : 1;
 
-			})();
+                // Return.
+                return {
+                    spinX: sX,
+                    spinY: sY,
+                    pixelX: pX,
+                    pixelY: pY
+                };
 
-	// Scroll wheel.
-		if (settings.scrollWheel.enabled)
-			(function() {
+            };
 
-				// Based on code by @miorel + @pieterv of Facebook (thanks guys :)
-				// github.com/facebook/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
-					var normalizeWheel = function(event) {
+            // Wheel event.
+            $body.on('wheel', function (event) {
 
-						var	pixelStep = 10,
-							lineHeight = 40,
-							pageHeight = 800,
-							sX = 0,
-							sY = 0,
-							pX = 0,
-							pY = 0;
+                // Disable on <=small.
+                if (breakpoints.active('<=small'))
+                    return;
 
-						// Legacy.
-							if ('detail' in event)
-								sY = event.detail;
-							else if ('wheelDelta' in event)
-								sY = event.wheelDelta / -120;
-							else if ('wheelDeltaY' in event)
-								sY = event.wheelDeltaY / -120;
+                // Prevent default.
+                event.preventDefault();
+                event.stopPropagation();
 
-							if ('wheelDeltaX' in event)
-								sX = event.wheelDeltaX / -120;
+                // Stop link scroll.
+                $bodyHtml.stop();
 
-						// Side scrolling on FF with DOMMouseScroll.
-							if ('axis' in event
-							&&	event.axis === event.HORIZONTAL_AXIS) {
-								sX = sY;
-								sY = 0;
-							}
+                // Calculate delta, direction.
+                var n = normalizeWheel(event.originalEvent),
+                    x = (n.pixelX != 0 ? n.pixelX : n.pixelY),
+                    delta = Math.min(Math.abs(x), 150) * settings.scrollWheel.factor,
+                    direction = x > 0 ? 1 : -1;
 
-						// Calculate.
-							pX = sX * pixelStep;
-							pY = sY * pixelStep;
+                // Scroll page.
+                $document.scrollLeft($document.scrollLeft() + (delta * direction));
 
-							if ('deltaY' in event)
-								pY = event.deltaY;
+            });
 
-							if ('deltaX' in event)
-								pX = event.deltaX;
+        })();
 
-							if ((pX || pY)
-							&&	event.deltaMode) {
+    // Scroll zones.
+    if (settings.scrollZones.enabled)
+        (function () {
 
-								if (event.deltaMode == 1) {
-									pX *= lineHeight;
-									pY *= lineHeight;
-								}
-								else {
-									pX *= pageHeight;
-									pY *= pageHeight;
-								}
+            var $left = $('<div class="scrollZone left"></div>'),
+                $right = $('<div class="scrollZone right"></div>'),
+                $zones = $left.add($right),
+                paused = false,
+                intervalId = null,
+                direction,
+                activate = function (d) {
 
-							}
+                    // Disable on <=small.
+                    if (breakpoints.active('<=small'))
+                        return;
 
-						// Fallback if spin cannot be determined.
-							if (pX && !sX)
-								sX = (pX < 1) ? -1 : 1;
+                    // Paused? Bail.
+                    if (paused)
+                        return;
 
-							if (pY && !sY)
-								sY = (pY < 1) ? -1 : 1;
+                    // Stop link scroll.
+                    $bodyHtml.stop();
 
-						// Return.
-							return {
-								spinX: sX,
-								spinY: sY,
-								pixelX: pX,
-								pixelY: pY
-							};
+                    // Set direction.
+                    direction = d;
 
-					};
+                    // Initialize interval.
+                    clearInterval(intervalId);
 
-				// Wheel event.
-					$body.on('wheel', function(event) {
+                    intervalId = setInterval(function () {
+                        $document.scrollLeft($document.scrollLeft() + (settings.scrollZones.speed * direction));
+                    }, 25);
 
-						// Disable on <=small.
-							if (breakpoints.active('<=small'))
-								return;
+                },
+                deactivate = function () {
 
-						// Prevent default.
-							event.preventDefault();
-							event.stopPropagation();
+                    // Unpause.
+                    paused = false;
 
-						// Stop link scroll.
-							$bodyHtml.stop();
+                    // Clear interval.
+                    clearInterval(intervalId);
 
-						// Calculate delta, direction.
-							var	n = normalizeWheel(event.originalEvent),
-								x = (n.pixelX != 0 ? n.pixelX : n.pixelY),
-								delta = Math.min(Math.abs(x), 150) * settings.scrollWheel.factor,
-								direction = x > 0 ? 1 : -1;
+                };
 
-						// Scroll page.
-							$document.scrollLeft($document.scrollLeft() + (delta * direction));
+            $zones
+                .appendTo($wrapper)
+                .on('mouseleave mousedown', function (event) {
+                    deactivate();
+                });
 
-					});
+            $left
+                .css('left', '0')
+                .on('mouseenter', function (event) {
+                    activate(-1);
+                });
 
-			})();
+            $right
+                .css('right', '0')
+                .on('mouseenter', function (event) {
+                    activate(1);
+                });
 
-	// Scroll zones.
-		if (settings.scrollZones.enabled)
-			(function() {
+            $wrapper
+                .on('---pauseScrollZone', function (event) {
 
-				var	$left = $('<div class="scrollZone left"></div>'),
-					$right = $('<div class="scrollZone right"></div>'),
-					$zones = $left.add($right),
-					paused = false,
-					intervalId = null,
-					direction,
-					activate = function(d) {
+                    // Pause.
+                    paused = true;
 
-						// Disable on <=small.
-							if (breakpoints.active('<=small'))
-								return;
+                    // Unpause after delay.
+                    setTimeout(function () {
+                        paused = false;
+                    }, 500);
 
-						// Paused? Bail.
-							if (paused)
-								return;
+                });
 
-						// Stop link scroll.
-							$bodyHtml.stop();
+        })();
 
-						// Set direction.
-							direction = d;
+    // Dragging.
+    if (settings.dragging.enabled)
+        (function () {
 
-						// Initialize interval.
-							clearInterval(intervalId);
+            var dragging = false,
+                dragged = false,
+                distance = 0,
+                startScroll,
+                momentumIntervalId, velocityIntervalId,
+                startX, currentX, previousX,
+                velocity, direction;
 
-							intervalId = setInterval(function() {
-								$document.scrollLeft($document.scrollLeft() + (settings.scrollZones.speed * direction));
-							}, 25);
+            $wrapper
 
-					},
-					deactivate = function() {
+                // Prevent image drag and drop.
+                .on('mouseup mousemove mousedown', '.image, img', function (event) {
+                    event.preventDefault();
+                })
 
-						// Unpause.
-							paused = false;
+                // Prevent mouse events inside excluded elements from bubbling.
+                .on('mouseup mousemove mousedown', settings.excludeSelector, function (event) {
 
-						// Clear interval.
-							clearInterval(intervalId);
+                    // Prevent event from bubbling.
+                    event.stopPropagation();
 
-					};
+                    // End drag.
+                    dragging = false;
+                    $wrapper.removeClass('is-dragging');
+                    clearInterval(velocityIntervalId);
+                    clearInterval(momentumIntervalId);
 
-				$zones
-					.appendTo($wrapper)
-					.on('mouseleave mousedown', function(event) {
-						deactivate();
-					});
+                    // Pause scroll zone.
+                    $wrapper.triggerHandler('---pauseScrollZone');
 
-				$left
-					.css('left', '0')
-					.on('mouseenter', function(event) {
-						activate(-1);
-					});
+                })
 
-				$right
-					.css('right', '0')
-					.on('mouseenter', function(event) {
-						activate(1);
-					});
+                // Mousedown event.
+                .on('mousedown', function (event) {
 
-				$wrapper
-					.on('---pauseScrollZone', function(event) {
+                    // Disable on <=small.
+                    if (breakpoints.active('<=small'))
+                        return;
 
-						// Pause.
-							paused = true;
+                    // Clear momentum interval.
+                    clearInterval(momentumIntervalId);
 
-						// Unpause after delay.
-							setTimeout(function() {
-								paused = false;
-							}, 500);
+                    // Stop link scroll.
+                    $bodyHtml.stop();
 
-					});
+                    // Start drag.
+                    dragging = true;
+                    $wrapper.addClass('is-dragging');
 
-			})();
+                    // Initialize and reset vars.
+                    startScroll = $document.scrollLeft();
+                    startX = event.clientX;
+                    previousX = startX;
+                    currentX = startX;
+                    distance = 0;
+                    direction = 0;
 
-	// Dragging.
-		if (settings.dragging.enabled)
-			(function() {
+                    // Initialize velocity interval.
+                    clearInterval(velocityIntervalId);
 
-				var dragging = false,
-					dragged = false,
-					distance = 0,
-					startScroll,
-					momentumIntervalId, velocityIntervalId,
-					startX, currentX, previousX,
-					velocity, direction;
+                    velocityIntervalId = setInterval(function () {
 
-				$wrapper
+                        // Calculate velocity, direction.
+                        velocity = Math.abs(currentX - previousX);
+                        direction = (currentX > previousX ? -1 : 1);
 
-					// Prevent image drag and drop.
-						.on('mouseup mousemove mousedown', '.image, img', function(event) {
-							event.preventDefault();
-						})
+                        // Update previous X.
+                        previousX = currentX;
 
-					// Prevent mouse events inside excluded elements from bubbling.
-						.on('mouseup mousemove mousedown', settings.excludeSelector, function(event) {
+                    }, 50);
 
-							// Prevent event from bubbling.
-								event.stopPropagation();
+                })
 
-							// End drag.
-								dragging = false;
-								$wrapper.removeClass('is-dragging');
-								clearInterval(velocityIntervalId);
-								clearInterval(momentumIntervalId);
+                // Mousemove event.
+                .on('mousemove', function (event) {
 
-							// Pause scroll zone.
-								$wrapper.triggerHandler('---pauseScrollZone');
+                    // Not dragging? Bail.
+                    if (!dragging)
+                        return;
 
-						})
+                    // Velocity.
+                    currentX = event.clientX;
 
-					// Mousedown event.
-						.on('mousedown', function(event) {
+                    // Scroll page.
+                    $document.scrollLeft(startScroll + (startX - currentX));
 
-							// Disable on <=small.
-								if (breakpoints.active('<=small'))
-									return;
+                    // Update distance.
+                    distance = Math.abs(startScroll - $document.scrollLeft());
 
-							// Clear momentum interval.
-								clearInterval(momentumIntervalId);
+                    // Distance exceeds threshold? Disable pointer events on all descendents.
+                    if (!dragged
+                        && distance > settings.dragging.threshold) {
 
-							// Stop link scroll.
-								$bodyHtml.stop();
+                        $wrapper.addClass('is-dragged');
 
-							// Start drag.
-								dragging = true;
-								$wrapper.addClass('is-dragging');
+                        dragged = true;
 
-							// Initialize and reset vars.
-								startScroll = $document.scrollLeft();
-								startX = event.clientX;
-								previousX = startX;
-								currentX = startX;
-								distance = 0;
-								direction = 0;
+                    }
 
-							// Initialize velocity interval.
-								clearInterval(velocityIntervalId);
+                })
 
-								velocityIntervalId = setInterval(function() {
+                // Mouseup/mouseleave event.
+                .on('mouseup mouseleave', function (event) {
 
-									// Calculate velocity, direction.
-										velocity = Math.abs(currentX - previousX);
-										direction = (currentX > previousX ? -1 : 1);
+                    var m;
 
-									// Update previous X.
-										previousX = currentX;
+                    // Not dragging? Bail.
+                    if (!dragging)
+                        return;
 
-								}, 50);
+                    // Dragged? Re-enable pointer events on all descendents.
+                    if (dragged) {
 
-						})
+                        setTimeout(function () {
+                            $wrapper.removeClass('is-dragged');
+                        }, 100);
 
-					// Mousemove event.
-						.on('mousemove', function(event) {
+                        dragged = false;
 
-							// Not dragging? Bail.
-								if (!dragging)
-									return;
+                    }
 
-							// Velocity.
-								currentX = event.clientX;
+                    // Distance exceeds threshold? Prevent default.
+                    if (distance > settings.dragging.threshold)
+                        event.preventDefault();
 
-							// Scroll page.
-								$document.scrollLeft(startScroll + (startX - currentX));
+                    // End drag.
+                    dragging = false;
+                    $wrapper.removeClass('is-dragging');
+                    clearInterval(velocityIntervalId);
+                    clearInterval(momentumIntervalId);
 
-							// Update distance.
-								distance = Math.abs(startScroll - $document.scrollLeft());
+                    // Pause scroll zone.
+                    $wrapper.triggerHandler('---pauseScrollZone');
 
-							// Distance exceeds threshold? Disable pointer events on all descendents.
-								if (!dragged
-								&&	distance > settings.dragging.threshold) {
+                    // Initialize momentum interval.
+                    if (settings.dragging.momentum > 0) {
 
-									$wrapper.addClass('is-dragged');
+                        m = velocity;
 
-									dragged = true;
+                        momentumIntervalId = setInterval(function () {
 
-								}
+                            // Momentum is NaN? Bail.
+                            if (isNaN(m)) {
 
-						})
+                                clearInterval(momentumIntervalId);
+                                return;
 
-					// Mouseup/mouseleave event.
-						.on('mouseup mouseleave', function(event) {
+                            }
 
-							var m;
+                            // Scroll page.
+                            $document.scrollLeft($document.scrollLeft() + (m * direction));
 
-							// Not dragging? Bail.
-								if (!dragging)
-									return;
+                            // Decrease momentum.
+                            m = m * settings.dragging.momentum;
 
-							// Dragged? Re-enable pointer events on all descendents.
-								if (dragged) {
+                            // Negligible momentum? Clear interval and end.
+                            if (Math.abs(m) < 1)
+                                clearInterval(momentumIntervalId);
 
-									setTimeout(function() {
-										$wrapper.removeClass('is-dragged');
-									}, 100);
+                        }, 15);
 
-									dragged = false;
+                    }
 
-								}
+                });
 
-							// Distance exceeds threshold? Prevent default.
-								if (distance > settings.dragging.threshold)
-									event.preventDefault();
+        })();
 
-							// End drag.
-								dragging = false;
-								$wrapper.removeClass('is-dragging');
-								clearInterval(velocityIntervalId);
-								clearInterval(momentumIntervalId);
+    // Link scroll.
+    $wrapper
+        .on('mousedown mouseup', 'a[href^="#"]', function (event) {
 
-							// Pause scroll zone.
-								$wrapper.triggerHandler('---pauseScrollZone');
+            // Stop propagation.
+            event.stopPropagation();
 
-							// Initialize momentum interval.
-								if (settings.dragging.momentum > 0) {
+        })
+        .on('click', 'a[href^="#"]', function (event) {
 
-									m = velocity;
+            var $this = $(this),
+                href = $this.attr('href'),
+                $target, x, y;
 
-									momentumIntervalId = setInterval(function() {
+            // Get target.
+            if (href == '#'
+                || ($target = $(href)).length == 0)
+                return;
 
-										// Momentum is NaN? Bail.
-											if (isNaN(m)) {
+            // Prevent default.
+            event.preventDefault();
+            event.stopPropagation();
 
-												clearInterval(momentumIntervalId);
-												return;
+            // Calculate x, y.
+            if (breakpoints.active('<=small')) {
 
-											}
+                x = $target.offset().top - (Math.max(0, $window.height() - $target.outerHeight()) / 2);
+                y = {scrollTop: x};
 
-										// Scroll page.
-											$document.scrollLeft($document.scrollLeft() + (m * direction));
+            } else {
 
-										// Decrease momentum.
-											m = m * settings.dragging.momentum;
+                x = $target.offset().left - (Math.max(0, $window.width() - $target.outerWidth()) / 2);
+                y = {scrollLeft: x};
 
-										// Negligible momentum? Clear interval and end.
-											if (Math.abs(m) < 1)
-												clearInterval(momentumIntervalId);
+            }
 
-									}, 15);
+            // Scroll.
+            $bodyHtml
+                .stop()
+                .animate(
+                    y,
+                    settings.linkScrollSpeed,
+                    'swing'
+                );
 
-								}
+        });
 
-						});
+    // Gallery.
+    $('.gallery')
+        .on('click', 'a', function(event) {
 
-			})();
+            var $a = $(this),
+                $gallery = $a.parents('.gallery'),
+                $modal = $gallery.children('.modal'),
+                $modalImg = $modal.find('img'),
+                href = $a.attr('href');
 
-	// Link scroll.
-		$wrapper
-			.on('mousedown mouseup', 'a[href^="#"]', function(event) {
+            // Not an image? Bail.
+            if (!href.match(/\.(jpg|gif|png|mp4)$/))
+                return;
 
-				// Stop propagation.
-					event.stopPropagation();
+            // Prevent default.
+            event.preventDefault();
+            event.stopPropagation();
 
-			})
-			.on('click', 'a[href^="#"]', function(event) {
+            // Locked? Bail.
+            if ($modal[0]._locked)
+                return;
 
-				var	$this = $(this),
-					href = $this.attr('href'),
-					$target, x, y;
+            // Lock.
+            $modal[0]._locked = true;
 
-				// Get target.
-					if (href == '#'
-					||	($target = $(href)).length == 0)
-						return;
+            // Set src.
+            $modalImg.attr('src', href);
 
-				// Prevent default.
-					event.preventDefault();
-					event.stopPropagation();
+            // Set visible.
+            $modal.addClass('visible');
 
-				// Calculate x, y.
-					if (breakpoints.active('<=small')) {
+            // Focus.
+            $modal.focus();
 
-						x = $target.offset().top - (Math.max(0, $window.height() - $target.outerHeight()) / 2);
-						y = { scrollTop: x };
+            // Delay.
+            setTimeout(function() {
 
-					}
-					else {
+                // Unlock.
+                $modal[0]._locked = false;
 
-						x = $target.offset().left - (Math.max(0, $window.width() - $target.outerWidth()) / 2);
-						y = { scrollLeft: x };
+            }, 600);
 
-					}
+        })
+        .on('click', '.modal', function(event) {
 
-				// Scroll.
-					$bodyHtml
-						.stop()
-						.animate(
-							y,
-							settings.linkScrollSpeed,
-							'swing'
-						);
+            var $modal = $(this),
+                $modalImg = $modal.find('img');
 
-			});
+            // Locked? Bail.
+            if ($modal[0]._locked)
+                return;
 
-	// Gallery.
-		$('.gallery')
-			.on('click', 'a', function(event) {
+            // Already hidden? Bail.
+            if (!$modal.hasClass('visible'))
+                return;
 
-				var $a = $(this),
-					$gallery = $a.parents('.gallery'),
-					$modal = $gallery.children('.modal'),
-					$modalImg = $modal.find('img'),
-					href = $a.attr('href');
+            // Stop propagation.
+            event.stopPropagation();
 
-				// Not an image? Bail.
-					if (!href.match(/\.(jpg|gif|png|mp4)$/))
-						return;
+            // Lock.
+            $modal[0]._locked = true;
 
-				// Prevent default.
-					event.preventDefault();
-					event.stopPropagation();
+            // Clear visible, loaded.
+            $modal
+                .removeClass('loaded')
 
-				// Locked? Bail.
-					if ($modal[0]._locked)
-						return;
+            // Delay.
+            setTimeout(function() {
 
-				// Lock.
-					$modal[0]._locked = true;
+                $modal
+                    .removeClass('visible')
 
-				// Set src.
-					$modalImg.attr('src', href);
+                // Pause scroll zone.
+                $wrapper.triggerHandler('---pauseScrollZone');
 
-				// Set visible.
-					$modal.addClass('visible');
+                setTimeout(function() {
 
-				// Focus.
-					$modal.focus();
+                    // Clear src.
+                    $modalImg.attr('src', '');
 
-				// Delay.
-					setTimeout(function() {
+                    // Unlock.
+                    $modal[0]._locked = false;
 
-						// Unlock.
-							$modal[0]._locked = false;
+                    // Focus.
+                    $body.focus();
 
-					}, 600);
+                }, 475);
 
-			})
-			.on('click', '.modal', function(event) {
+            }, 125);
 
-				var $modal = $(this),
-					$modalImg = $modal.find('img');
+        })
+        .on('keypress', '.modal', function(event) {
 
-				// Locked? Bail.
-					if ($modal[0]._locked)
-						return;
+            var $modal = $(this);
 
-				// Already hidden? Bail.
-					if (!$modal.hasClass('visible'))
-						return;
+            // Escape? Hide modal.
+            if (event.keyCode == 27)
+                $modal.trigger('click');
 
-				// Stop propagation.
-					event.stopPropagation();
+        })
+        .on('mouseup mousedown mousemove', '.modal', function(event) {
 
-				// Lock.
-					$modal[0]._locked = true;
+            // Stop propagation.
+            event.stopPropagation();
 
-				// Clear visible, loaded.
-					$modal
-						.removeClass('loaded')
+        })
+        .prepend('<div class="modal" tabIndex="-1"><div class="inner"><img src="" /></div></div>')
+        .find('img')
+        .on('load', function(event) {
 
-				// Delay.
-					setTimeout(function() {
+            var $modalImg = $(this),
+                $modal = $modalImg.parents('.modal');
 
-						$modal
-							.removeClass('visible')
+            setTimeout(function() {
 
-						// Pause scroll zone.
-							$wrapper.triggerHandler('---pauseScrollZone');
+                // No longer visible? Bail.
+                if (!$modal.hasClass('visible'))
+                    return;
 
-						setTimeout(function() {
+                // Set loaded.
+                $modal.addClass('loaded');
 
-							// Clear src.
-								$modalImg.attr('src', '');
+            }, 275);
 
-							// Unlock.
-								$modal[0]._locked = false;
-
-							// Focus.
-								$body.focus();
-
-						}, 475);
-
-					}, 125);
-
-			})
-			.on('keypress', '.modal', function(event) {
-
-				var $modal = $(this);
-
-				// Escape? Hide modal.
-					if (event.keyCode == 27)
-						$modal.trigger('click');
-
-			})
-			.on('mouseup mousedown mousemove', '.modal', function(event) {
-
-				// Stop propagation.
-					event.stopPropagation();
-
-			})
-			.prepend('<div class="modal" tabIndex="-1"><div class="inner"><img src="" /></div></div>')
-				.find('img')
-					.on('load', function(event) {
-
-						var $modalImg = $(this),
-							$modal = $modalImg.parents('.modal');
-
-						setTimeout(function() {
-
-							// No longer visible? Bail.
-								if (!$modal.hasClass('visible'))
-									return;
-
-							// Set loaded.
-								$modal.addClass('loaded');
-
-						}, 275);
-
-					});
-
+        });
 })(jQuery);

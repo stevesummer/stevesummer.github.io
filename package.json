@@ -1,0 +1,35 @@
+{
+  "name": "stevesummer.github.io",
+  "version": "1.0.0",
+  "description": "SS personal webpage",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "NODE_ENV=production vite build",
+    "preview": "vite preview",
+    "build:report": "NODE_ENV=production vite build --report",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevesummer/stevesummer.github.io.git"
+  },
+  "author": "Steven Summer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stevesummer/stevesummer.github.io/issues"
+  },
+  "homepage": "https://github.com/stevesummer/stevesummer.github.io#readme",
+  "packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d",
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.1.10",
+    "vite-imagetools": "^9.0.0",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-imagemin": "^0.6.1",
+    "vite-plugin-static-copy": "^3.1.4"
+  },
+  "dependencies": {
+    "jquery": "^3.7.1"
+  }
+}
