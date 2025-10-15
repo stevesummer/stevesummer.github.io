@@ -1,39 +1,35 @@
 import jQuery from "jquery";
 
-/*
-	Ethereal by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
-*/
-const FORM_EMAIL = "stevesummer61@gmail.com"
+const FORM_EMAIL = "d0fee27e9bef436b6602add079dbc5cf"
 
 const submitForm = async (data = {}, dest = FORM_EMAIL) => {
-    const resp = await fetch("https://templinx6.api.linx.twenty57.net/Form2Channel", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        },
-        body: JSON.stringify([
-            {"key": "formto_email", "value": dest},
-            {"key": "formto_immediate", "value": ""},
-            {"key": "date", "value": (new Date()).toISOString()},
-            {"key": "form", "value": `Message from ${data.name ?? "Unknown Sender"}`},
-            {"key": "name", "value": data.name},
-            {"key": "email", "value": data.email},
-            {"key": "category", "value": data.category},
-            {"key": "message", "value": data.message},
-            {"key": "rawdata", "value": JSON.stringify(data)},
-        ]),
-    });
-    if (!resp.ok) {
-        console.error("Network response was not ok", resp.status);
-        throw new Error("Network response was not ok");
-    }
-    if (!(await resp.json()).Success) {
-        throw new Error("Unexpected error occurred.");
+    const fd = new FormData();
+    fd.append('_subject', `Message from ${data.name ?? "Unknown Sender"}`);
+    fd.append('_replyto', data.email ?? '');
+    fd.append('_honey', data.honeypot ?? '');
+    fd.append('_captcha', "false");
+    fd.append('_template', "table");
+    fd.append('name', data.name ?? '');
+    fd.append('email', data.email ?? '');
+    fd.append('category', data.category ?? '');
+    fd.append('message', data.message ?? '');
+
+    if (data.file) {
+        try {
+            fd.append('file', data.file, data.file.name);
+        } catch (e) {}
     }
 
+    const resp = await fetch(`https://formsubmit.co/${FORM_EMAIL}`, {
+        method: "POST",
+        body: fd,
+    });
+    if (!resp.ok) {
+        let text = '';
+        try { text = await resp.text(); } catch (e) { /* ignore */ }
+        console.error("Server responded with non-OK status", resp.status, text);
+        throw new Error(`Submission failed (status ${resp.status})`);
+    }
     return true;
 };
 
@@ -42,17 +38,37 @@ const submitForm = async (data = {}, dest = FORM_EMAIL) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        var $form = $("#contact-form");
-        let $submitBtn = $("#contact-form-submit");
-        let originalText = $submitBtn.text();
+        const $form = $("#contact-form")[0];
+        const $submitBtn = $("#contact-form-submit");
+        const originalText = $submitBtn.text();
+        const fileInput = $("#file")[0]
 
         $submitBtn.prop('disabled', true).text('Submitting...');
-        submitForm({
+
+        const data = {
             name: $("#name").val(),
             email: $("#email").val(),
             category: $("#category").val(),
+            honeypot: $("#honeypot").val(),
             message: $("#message").val(),
-        }).then(response => {
+            file: undefined,
+        }
+
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const MAX = 5 * 1024 * 1024;
+            if (file.size > MAX) {
+                // show error on button briefly and re-enable
+                $submitBtn.text('File too large (max 5MB)');
+                setTimeout(function () {
+                    $submitBtn.prop('disabled', false).text(originalText);
+                }, 2000);
+                return;
+            }
+            data.file = file;
+        }
+
+        submitForm(data).then(response => {
             console.debug(response);
             $submitBtn.text('Message sent!');
             setTimeout(function() {
